@@ -222,7 +222,7 @@ module OffsitePayments #:nodoc:
         end
 
         # alias success?
-        alias_method :success? :complete?
+        alias_method :success?, :complete?
 
         # Fields for Realex signature verification
         def timestamp
