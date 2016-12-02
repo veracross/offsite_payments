@@ -1,4 +1,4 @@
-require 'byebug'
+require 'openssl'
 
 module OffsitePayments
   module Integrations #:nodoc:
@@ -7,6 +7,8 @@ module OffsitePayments
       # Overwrite this if you want to change the ANS production url
       mattr_accessor :production_url
       self.production_url = 'https://migs.mastercard.com.au/vpcpay'
+
+      HASH_ALGORITHM = 'SHA256'.freeze
 
       def self.service_url
         mode = OffsitePayments.mode
@@ -153,11 +155,17 @@ module OffsitePayments
 
         # This must be called at the end after all other fields have been added
         def add_secure_hash
-          sorted_values = @fields.sort_by(&:to_s).map(&:last)
-          input = @secret + sorted_values.join
-          hash = Digest::MD5.hexdigest(input).upcase
-
+          # Per MIGS requirements we must stringify, sort fields alphabetically
+          # minus the 'vpc_' prefix, add back the 'vpc_' prefix after sorting,
+          # then join all fields as a query string separated by '&'.
+          sorted_values = @fields.stringify_keys
+                                 .map { |(k, v)| [k.gsub('vpc_', ''), v] }
+                                 .sort
+                                 .map { |i| "vpc_#{i[0]}=#{i[1]}" }
+                                 .join('&')
+          hash = OpenSSL::HMAC.hexdigest(HASH_ALGORITHM, [@secret].pack('H*'), sorted_values).upcase
           add_field('vpc_SecureHash', hash)
+          add_field('vpc_SecureHashType', 'SHA256')
         end
 
         mapping :account, 'vpc_Merchant'
@@ -186,7 +194,7 @@ module OffsitePayments
         end
 
         def message
-          return 'Response from MiGS could not be validated' if not @valid
+          return 'Response from MiGS could not be validated' unless @valid
           params['vpc_Message']
         end
 
@@ -252,12 +260,16 @@ module OffsitePayments
         end
 
         def secure_hash_matches?
-          return false if not params['vpc_SecureHash']
+          return false unless params['vpc_SecureHash']
           response = params.clone
           response.delete('vpc_SecureHash')
-          sorted_values = response.sort_by(&:to_s).map(&:last)
-          input = @options[:secret] + sorted_values.join
-          Digest::MD5.hexdigest(input).upcase == secure_hash
+          response.delete('vpc_SecureHashType')
+          sorted_values = response.stringify_keys
+                                  .map { |(k, v)| [k.gsub('vpc_', ''), v] }
+                                  .sort.map { |i| "vpc_#{i[0]}=#{i[1]}" }
+                                  .join('&')
+          hash = OpenSSL::HMAC.hexdigest(HASH_ALGORITHM, [@options[:secret]].pack('H*'), sorted_values).upcase
+          hash == secure_hash
         end
 
         # Returns true if one of the following is true:
