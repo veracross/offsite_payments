@@ -1,6 +1,6 @@
 module OffsitePayments #:nodoc:
   module Integrations #:nodoc:
-    module NetworkMerchantsOffsite
+    module DiamondMind
       mattr_accessor :production_url
       mattr_accessor :test_url
       self.production_url = 'https://secure.networkmerchants.com/api/v2/three-step'
