@@ -70,10 +70,6 @@ module OffsitePayments #:nodoc:
           Digest::SHA1.hexdigest(signed)
         end
 
-        # Realex accepts currency amounts as an integer in the lowest value
-        # e.g.
-        #     format_amount(110.56, 'GBP')
-        #     => 11056
         def format_amount(amount, currency)
           if amount.is_a? Float
             units = CURRENCY_SPECIAL_MINOR_UNITS[currency] || 2
@@ -98,7 +94,6 @@ module OffsitePayments #:nodoc:
         def extract_avs_code(params={})
           [extract_digits(params[:zip]), extract_digits(params[:address1])].join('|')
         end
-
       end
 
       class Helper < OffsitePayments::Helper
@@ -111,18 +106,7 @@ module OffsitePayments #:nodoc:
           @sub_account = options[:credential2]
           @secret      = options[:credential3]
           super
-          # # Credentials
-          # add_field 'MERCHANT_ID', @merchant_id
-          # add_field 'ACCOUNT', @sub_account
-          # # Defaults
-          # add_field 'AUTO_SETTLE_FLAG', '1'
-          # add_field 'RETURN_TSS', '1'
-          # add_field 'TIMESTAMP', @timestamp
-          # # Realex does not send back CURRENCY param in response
-          # # however it does echo any other param so we send it twice.
           add_field 'currency', @currency
-          # add_field 'X-TEST', @test.to_s
-          # add_field 'ORDER_ID', "#{order}#{@timestamp.to_i}"
         end
 
         def form_fields
@@ -143,30 +127,11 @@ module OffsitePayments #:nodoc:
           add_field(mappings[:shipping_address][:country], lookup_country_code(params[:country]))
         end
 
-        # def sign_fields
-        #   @fields.merge!('SHA1HASH' => generate_signature)
-        # end
-        #
-        # def generate_signature
-        #   fields_to_sign = []
-        #   ['TIMESTAMP', 'MERCHANT_ID', 'ORDER_ID', 'AMOUNT', 'CURRENCY'].each do |field|
-        #     fields_to_sign << @fields[field]
-        #   end
-        #
-        #   create_signature(fields_to_sign, @secret)
-        # end
-
-        # Realex Required Fields
         mapping :currency,         'currency'
-
         mapping :order,            'order-id'
         mapping :amount,           'amount'
-        # mapping :notify_url,       'form_url'
         mapping :return_url,       'redirect-url,'
-
-        # Realex Optional fields
         mapping :customer,         :email => 'email'
-
         mapping :shipping_address, :zip =>        'postal',
                                    :country =>    'country'
         mapping :billing_address,  :zip =>        'postal',
@@ -179,128 +144,6 @@ module OffsitePayments #:nodoc:
           super
           @secret = options[:credential3]
         end
-
-        # # Required Notification methods to define
-        # def acknowledge(authcode = nil)
-        #   verified?
-        # end
-        #
-        # def item_id
-        #   checkout_id
-        # end
-        #
-        # def transaction_id
-        #   pasref
-        # end
-        #
-        # def test?
-        #   params['X-TEST']
-        # end
-        #
-        # def status
-        #   if result == '00'
-        #     'Completed'
-        #   else
-        #     'Invalid'
-        #   end
-        # end
-        #
-        # # Realex does not send back the currency param by default
-        # # we have sent this additional parameter
-        # def currency
-        #   params['X-CURRENCY']
-        # end
-        #
-        # def gross
-        #   format_amount_as_float(params['AMOUNT'], currency)
-        # end
-        #
-        #
-        # def complete?
-        #   verified? && status == 'Completed'
-        # end
-        #
-        # def success?
-        #   status == 'Completed'
-        # end
-        #
-        # # Fields for Realex signature verification
-        # def timestamp
-        #   params['TIMESTAMP']
-        # end
-        #
-        # def merchant_id
-        #   params['MERCHANT_ID']
-        # end
-        #
-        # def checkout_id
-        #   params['CHECKOUT_ID']
-        # end
-        #
-        # def order_id
-        #   params['ORDER_ID']
-        # end
-        # alias_method :transaction_id, :order_id
-        #
-        # def result
-        #   params['RESULT']
-        # end
-        #
-        # def message
-        #   params['MESSAGE']
-        # end
-        #
-        # def pasref
-        #   params['PASREF']
-        # end
-        #
-        # def authcode
-        #   params['AUTHCODE']
-        # end
-        # alias_method :authorization_code, :authcode
-        #
-        # def signature
-        #   params['SHA1HASH']
-        # end
-        #
-        # def calculated_signature
-        #   fields = [timestamp, merchant_id, order_id, result, message, pasref, authcode]
-        #   create_signature(fields, @secret)
-        # end
-        #
-        # def verified?
-        #   signature == calculated_signature
-        # end
-        #
-        # # Extra data (available from Realex)
-        # def cvn_result
-        #   params['CVNRESULT']
-        # end
-        #
-        # def avs_postcode_result
-        #   params['AVSPOSTCODERESULT']
-        # end
-        #
-        # def avs_address_result
-        #   params['AVSADDRESSRESULT']
-        # end
-        #
-        # def pasref
-        #   params['PASREF']
-        # end
-        #
-        # def eci
-        #   params['ECI']
-        # end
-        #
-        # def cavv
-        #   params['CAVV']
-        # end
-        #
-        # def xid
-        #   params['XID']
-        # end
-
       end
 
       class Return < OffsitePayments::Return
@@ -322,7 +165,6 @@ module OffsitePayments #:nodoc:
           notification.message
         end
       end
-
     end
   end
 end
