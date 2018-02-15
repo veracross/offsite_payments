@@ -15,9 +15,14 @@ class MolpayReturnTest < Test::Unit::TestCase
   end
 
   def test_failed?
+    Molpay::Notification.any_instance.stubs(:ssl_post).returns('DECLINED')
     molpay = Molpay::Return.new('', :credential2 => @secret)
-
     refute molpay.success?
+  end
+
+  def test_pending?
+    molpay = Molpay::Return.new('status=22', :credential2 => @secret)
+    assert molpay.pending?
   end
 
   private

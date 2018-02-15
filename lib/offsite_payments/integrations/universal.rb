@@ -73,20 +73,13 @@ module OffsitePayments #:nodoc:
           add_field 'x_amount', format_amount(amount, @currency)
         end
 
-        def shipping(amount)
-          add_field 'x_amount_shipping', format_amount(amount, @currency)
-        end
-
-        def tax(amount)
-          add_field 'x_amount_tax', format_amount(amount, @currency)
-        end
-
         def sign_fields
           @fields.merge!('x_signature' => generate_signature)
         end
 
         def generate_signature
-          Universal.sign(@fields, @key)
+          fields_to_sign = @fields.select { |key, _| key.start_with?('x_') && key != 'x_signature' }
+          Universal.sign(fields_to_sign, @key)
         end
 
         mapping :account,          'x_account_id'
@@ -104,6 +97,17 @@ module OffsitePayments #:nodoc:
                            :last_name  => 'x_customer_last_name',
                            :email      => 'x_customer_email',
                            :phone      => 'x_customer_phone'
+
+        mapping :billing_address, :first_name => 'x_customer_billing_first_name',
+                                  :last_name =>  'x_customer_billing_last_name',
+                                  :city =>       'x_customer_billing_city',
+                                  :company =>    'x_customer_billing_company',
+                                  :address1 =>   'x_customer_billing_address1',
+                                  :address2 =>   'x_customer_billing_address2',
+                                  :state =>      'x_customer_billing_state',
+                                  :zip =>        'x_customer_billing_zip',
+                                  :country =>    'x_customer_billing_country',
+                                  :phone =>      'x_customer_billing_phone'
 
         mapping :shipping_address, :first_name => 'x_customer_shipping_first_name',
                                    :last_name =>  'x_customer_shipping_last_name',
@@ -160,6 +164,10 @@ module OffsitePayments #:nodoc:
           result && result.capitalize
         end
 
+        def message
+          @params['x_message']
+        end
+
         def test?
           @params['x_test'] == 'true'
         end
@@ -180,6 +188,10 @@ module OffsitePayments #:nodoc:
 
         def success?
           @notification.acknowledge
+        end
+
+        def message
+          @notification.message
         end
       end
     end

@@ -1,4 +1,5 @@
 require 'openssl'
+require 'base64'
 
 module OffsitePayments
   module Integrations #:nodoc:

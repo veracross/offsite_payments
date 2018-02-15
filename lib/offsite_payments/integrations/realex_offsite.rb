@@ -88,10 +88,11 @@ module OffsitePayments #:nodoc:
         def format_amount_as_float(amount, currency)
           units = CURRENCY_SPECIAL_MINOR_UNITS[currency] || 2
           divisor = 10**units
-          return (amount.to_f / divisor.to_f)
+          return ((amount || 0).to_d / divisor.to_d)
         end
 
         def extract_digits(value)
+          return unless value
           value.scan(/\d+/).join('')
         end
 

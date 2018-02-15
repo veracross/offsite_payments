@@ -2,8 +2,8 @@ require 'securerandom'
 require 'cgi'
 require "timeout"
 require "socket"
-
-require 'active_support/core_ext/class/delegating_attributes'
+require 'bigdecimal'
+require 'bigdecimal/util'
 
 require 'active_utils'
 
