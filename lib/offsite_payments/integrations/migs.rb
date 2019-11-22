@@ -6,7 +6,7 @@ module OffsitePayments
 
       # Overwrite this if you want to change the ANS production url
       mattr_accessor :production_url
-      self.production_url = 'https://migs.mastercard.com.au/vpcpay'
+      self.production_url = 'https://migs.mastercard.co.in/vpcpay'
 
       HASH_ALGORITHM = 'SHA256'.freeze
 
@@ -67,7 +67,7 @@ module OffsitePayments
           add_field('vpc_gateway', 'ssl')
           add_field('vpc_Command', 'pay')
           add_field('vpc_Version', '1')
-          add_field('vpc_VirtualPaymentClientURL', 'https://migs.mastercard.com.au/vpcpay')
+          add_field('vpc_VirtualPaymentClientURL', 'https://migs.mastercard.co.in/vpcpay')
 
           self.locale = locale
           self.access_code = access_code
